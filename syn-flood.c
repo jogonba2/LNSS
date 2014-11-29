@@ -5,7 +5,6 @@
 
 
 int main(int argc,char* argv[]){
-	srand(time(NULL));
     if(argc==0) fprintf(stdout,"Usage: syn-flood --dest www.host.domain --port port");
 	else{	
 		
