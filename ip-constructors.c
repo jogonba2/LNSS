@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>	
 
-
 void set_sockaddr_in(struct sockaddr_in* myaddr,char* source_address,char* source_port){
 	myaddr->sin_family = AF_INET;
 	myaddr->sin_port   = string_htons(source_port);
@@ -14,14 +13,20 @@ void set_sockaddr_in(struct sockaddr_in* myaddr,char* source_address,char* sourc
 }
 
 int get_socket_descriptor_raw_tcp(){
-	int fd = socket(PF_INET,SOCK_RAW,IPPROTO_TCP);
+	int fd = socket(AF_INET,SOCK_RAW,IPPROTO_TCP);
 	if(fd==-1) fprintf(stderr,"Error creating TCP socket.");
 	return fd;
 }
 
 int get_socket_descriptor_raw_udp(){
-	int fd = socket(PF_INET,SOCK_RAW,IPPROTO_UDP);
+	int fd = socket(AF_INET,SOCK_RAW,IPPROTO_UDP);
 	if(fd==-1) fprintf(stderr,"Error creating UDP socket.");
+	return fd;
+}
+
+int get_socket_descriptor_raw_icmp(){
+	int fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+	if(fd==-1) fprintf(stderr,"Error creating ICMP socket.");
 	return fd;
 }
 
@@ -33,11 +38,11 @@ void set_ip_header(IP_HEADER* ip_hdr,char version,unsigned char ihl,unsigned cha
 	ip_hdr->version = version;
 	ip_hdr->ihl     = ihl;
 	ip_hdr->tos     = tos;
-	if(protocol==IP_TCP_PROTOCOL) 			ip_hdr->total_length = sizeof(IP_HEADER)+sizeof(TCP_HEADER);
+	if(protocol==IP_TCP_PROTOCOL) 			    ip_hdr->total_length = sizeof(IP_HEADER)+sizeof(TCP_HEADER);
 	else if(protocol==IP_UDP_PROTOCOL)  		ip_hdr->total_length = sizeof(IP_HEADER)+sizeof(UDP_HEADER);
 	else if(protocol==IP_ICMP_PROTOCOL) 		ip_hdr->total_length = sizeof(IP_HEADER)+sizeof(ICMP_HEADER);
 	else    					ip_hdr->total_length = IP_DEFAULT_LENGTH;
-	ip_hdr->identification = identification;
+	ip_hdr->identification = htons(identification);
 	ip_hdr->zero_flag = zero_flag;
 	ip_hdr->do_not_fragments = do_not_fragments;
 	ip_hdr->more_fragments   = more_fragments;
@@ -58,10 +63,11 @@ void set_tcp_header(TCP_HEADER* tcp_hdr,char* source_port,char* remote_port,unsi
 					unsigned short int urg_pointer,unsigned int tcp_options,char* buffer){
 	tcp_hdr->source_port  = string_htons(source_port);
 	tcp_hdr->remote_port  = string_htons(remote_port);
-	tcp_hdr->num_sequence = num_sequence;
-	tcp_hdr->ack_number   = ack_number;
+	tcp_hdr->num_sequence = ntohl(num_sequence);
+	tcp_hdr->ack_number   = ntohl(ack_number);
 	tcp_hdr->offset       = offset;
 	tcp_hdr->reserved     = reserved;
+	tcp_hdr->ns           = htons(0);
 	tcp_hdr->flag_reduced = flag_reduced;
 	tcp_hdr->flag_echo    = flag_echo;
 	tcp_hdr->flag_urg     = flag_urg;
@@ -73,7 +79,7 @@ void set_tcp_header(TCP_HEADER* tcp_hdr,char* source_port,char* remote_port,unsi
 	tcp_hdr->window       = window;
 	tcp_hdr->checksum     = 0; //checksum_md5((unsigned short*) buffer,(sizeof(IP_HEADER) + sizeof(TCP_HEADER)));
 	tcp_hdr->urg_pointer  = urg_pointer;
-	//tcp_hdr->tcp_options  = tcp_options;	
+	tcp_hdr->tcp_options  = tcp_options;	
 }
 
 void set_udp_header(UDP_HEADER* udp_hdr,unsigned char* source_port,
@@ -82,10 +88,35 @@ void set_udp_header(UDP_HEADER* udp_hdr,unsigned char* source_port,
 		   			unsigned short checksum){
 	udp_hdr->source_port     = string_htons(source_port);
 	udp_hdr->remote_port     = string_htons(remote_port);
-	udp_hdr->datagram_length = datagram_length;
-	udp_hdr->checksum        = checksum; //checksum_md5((unsigned short*) buffer,(sizeof(IP_HEADER) + sizeof(UDP_HEADER)));
+	udp_hdr->datagram_length = htons(datagram_length);
+	udp_hdr->checksum        = htons(checksum); //checksum_md5((unsigned short*) buffer,(sizeof(IP_HEADER) + sizeof(UDP_HEADER)));
+}
+
+void set_icmp_header(ICMP_HEADER* icmp_hdr,unsigned char type,unsigned char code,unsigned short checksum,unsigned int specific_information){
+	icmp_hdr->type 	   			   = type;
+	icmp_hdr->code 	   			   = code;
+	icmp_hdr->checksum 			   = checksum;
+	icmp_hdr->specific_information = specific_information;
+}
+
+
+void set_igmp_header(IGMP_HEADER* igmp_hdr,unsigned char version,unsigned char type,unsigned char code,
+					 unsigned short checksum,unsigned int group_address){
+	igmp_hdr->version  		= version;
+	igmp_hdr->type     		= type;
+	igmp_hdr->code     		= code;
+	igmp_hdr->checksum 		= checksum;
+	igmp_hdr->group_address = group_address;
 }
 	
+void mod_ip_header_source_ip(IP_HEADER* ip_hdr,char* source_address){
+	ip_hdr->source_address   = string_addr(source_address);
+}
+
+void mod_tcp_header_source_port(TCP_HEADER* tcp_hdr,char* source_port){
+	tcp_hdr->source_port     = string_htons(source_port);
+}
+
 int kernel_not_fill_my_header(int socket){
     int val = 1;
     const int *pval = &val;

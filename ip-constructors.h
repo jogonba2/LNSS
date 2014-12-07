@@ -25,7 +25,13 @@ void set_udp_header(UDP_HEADER* udp_hdr,
 		    unsigned char* remote_port,
 		    unsigned short datagram_length,
 		    unsigned short checksum);
-void set_eth_frame();
-void set_icmp_header();
+		    
+void set_icmp_header(ICMP_HEADER*,unsigned char,unsigned char,unsigned short,unsigned int);
+void set_igmp_header(IGMP_HEADER*,unsigned char,unsigned char,unsigned char,unsigned short,unsigned int);
+void mod_ip_header_source_ip(IP_HEADER*,char*);
+void mod_tcp_header_source_port(TCP_HEADER*,char*);
+
+
 void set_dns_header();
+void set_eth_frame();
 void set_dhcp_header();

