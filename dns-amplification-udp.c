@@ -3,6 +3,7 @@
 #include "applications.c"
 #include "constants.h"
 #include <stdio.h>
+#include <omp.h>
 // Arguments standarized and checked //
 
 // Respects executable [--source-addr saddr --[remote|broadcast]-addr raddr --source-port sport [--remote-port rport] [--n N]] //
@@ -40,13 +41,15 @@ int main(int argc,char* argv[]){
 		SHOW_CREATED_IP_HEADER(ip_hdr);
 		
 		set_udp_header(udp_hdr,source_port,remote_port,46,0);
-		SHOW_CREATED_UDP_HEADER(tcp_hdr);
+		SHOW_CREATED_UDP_HEADER(udp_hdr);
 
 		/** Notice the kernel that we doesn't need it fill the header **/
 		if(kernel_not_fill_my_header(sock)<0){fprintf(stderr,"Is not possible to notice the kernel"); exit(0);}
 		
 		/** Application **/
 		int i,sent=0;
+		omp_set_num_threads(8); // Adjust num threads to your machine //
+		#pragma omp parallel for reduction(+:sent) if(iter>=2000000)
 		for(i=0;i<iter;i++){
 			if(sendto(sock, buffer, ip_hdr->total_length, 0, (struct sockaddr *)&myaddr, sizeof(myaddr))>=0) sent++;
 		}

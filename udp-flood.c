@@ -38,7 +38,7 @@ int main(int argc,char* argv[]){
 		SHOW_CREATED_IP_HEADER(ip_hdr);
 		
 		set_udp_header(udp_hdr,source_port,remote_port,64,0);
-		SHOW_CREATED_UDP_HEADER(tcp_hdr);
+		SHOW_CREATED_UDP_HEADER(udp_hdr);
 
 		/** Notice the kernel that we doesn't need it fill the header **/
 		if(kernel_not_fill_my_header(sock)<0){fprintf(stderr,"Is not possible to notice the kernel"); exit(0);}

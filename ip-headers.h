@@ -106,7 +106,3 @@ typedef struct dns_header{
 	unsigned short total_authority;
 	unsigned short total_additional;
 }DNS_HEADER,*P_DNS_HEADER;
-
-// Añadir más headers //
-
-

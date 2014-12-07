@@ -45,11 +45,41 @@
 														  tcp_hdr->flag_fin,tcp_hdr->window,tcp_hdr->checksum,\
 														  tcp_hdr->urg_pointer,tcp_hdr->tcp_options))
 
-#define SHOW_CREATED_UDP_HEADER(tcp_hdr) (fprintf(stdout,"| UDP HEADER |\n"))
-#define SHOW_CREATED_ICMP_HEADER(icmp_hdr) (fprintf(stdout,"| ICMP HEADER |\n"))
-#define SHOW_CREATED_IGMP_HEADER(icmp_hdr) (fprintf(stdout,"| IGMP HEADER |\n"))
-// ... //
+#define SHOW_CREATED_UDP_HEADER(udp_hdr) (fprintf(stdout,"|***************** UDP HEADER *****************|\n\
+														  |   Source port=%d    |   Destination port=%d  |\n\
+														  |---------------------|------------------------|\n\
+											              |      length=%d      |   checksum=%d          |\n\
+														  |----------------------------------------------|\n",\
+														  udp_hdr->source_port,udp_hdr->remote_port,\
+														  udp_hdr->datagram_length,udp_hdr->checksum))
+#define SHOW_CREATED_ICMP_HEADER(icmp_hdr) (fprintf(stdout,	"|***************** ICMP HEADER ******************|\n\
+															 |   type=%d             |   code=%d              |\n\
+															 |------------|--------|--------|-----------------|\n\
+															 |              checksum=%d                       |\n\
+															 |---------------------|--------------------------|\n\
+														     |              Other message=%d                  |\n\
+															 |------------------------------------------------|\n",\
+															 icmp_hdr->type,icmp_hdr->code,icmp_hdr->checksum,\
+															 icmp_hdr->specific_information))
+#define SHOW_CREATED_IGMP_HEADER(igmp_hdr) (fprintf(stdout,"|***************** IGMP HEADER ******************|\n\
+												            |   IGMP Version=%d   |   IGMP Message Type=%d   |\n\
+															|------------|--------|--------|-----------------|\n\
+															|   ucode=%d          |     Checksum(16b)=%d     |\n\
+															|---------------------|--------------------------|\n\
+															|              IP Multicast Group Address=%d     |\n\
+															|------------------------------------------------|\n",\
+															igmp_hdr->version,igmp_hdr->type,igmp_hdr->code,\
+															igmp_hdr->checksum,igmp_hdr->group_address))
 
 
-
+#define SHOW_CREATED_DNS_HEADER(dns_hdr) (fprintf(stdout,	\
+     "|******************************DNS HEADER**************************************|\n\
+      |  Identification=%d  |  QR=%d |  Opcode=%d  | DNS Flags=%d  | RCode=%d        |\n\
+      |---------------------|--------------------------------------------------------|\n\
+      |           Total Questions=%d         |     Total answers=%d                  |\n\
+      |---------------------|----------------|---------------------------------------|\n\
+      | Total Authority Resource Records=%d  | Total Additional Resource Records=%d  |\n\
+      |------------------------------------------------------------------------------|\n"\
+      dns_hdr->identification,dns_hdr->qr_flags,dns_hdr->dns_flags,dns_hdr->rcode,dns_hdr->total_questions,\
+      dns_hdr->total_answers,dns_hdr->total_authority,dns_hdr->total_additional))
 // Add your macros //
